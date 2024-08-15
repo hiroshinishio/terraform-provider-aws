@@ -220,9 +220,6 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		//
 		// types.Bool -> bool.
 		//
-		if legacy {
-			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
-		}
 		vTo.SetBool(v.ValueBool())
 		return diags
 
@@ -346,9 +343,6 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		//
 		// types.Int32/types.Int64 -> int32/int64.
 		//
-		if legacy {
-			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
-		}
 		vTo.SetInt(v.ValueInt64())
 		return diags
 
@@ -406,9 +400,6 @@ func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Val
 		//
 		// types.Int32 -> int32.
 		//
-		if legacy {
-			tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
-		}
 		vTo.SetInt(int64(v.ValueInt32()))
 		return diags
 
