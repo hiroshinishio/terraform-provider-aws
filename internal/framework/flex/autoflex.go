@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	pluralize "github.com/gertd/go-pluralize"
@@ -30,7 +31,7 @@ const (
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
+	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, bool) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
 
@@ -118,11 +119,11 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 
 	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if field.PkgPath != "" {
+		fromField := typFrom.Field(i)
+		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fieldName := field.Name
+		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
@@ -158,7 +159,17 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
+		// TODO: This applies to Expanding
+		var legacy bool
+		tags := fromField.Tag
+		tag := tags.Get("autoflex")
+		if len(tag) > 0 {
+			split := strings.Split(tag, ",")
+			options := split[1:]
+			legacy = slices.Contains(options, "legacy")
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, legacy)...)
 		if diags.HasError() {
 			break
 		}
