@@ -25,6 +25,10 @@ type tfSingleStringField struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
+type tfSingleStringFieldLegacy struct {
+	Field1 types.String `tfsdk:"field1" autoflex:",legacy"`
+}
+
 type tfSingleFloat64Field struct {
 	Field1 types.Float64 `tfsdk:"field1"`
 }
